@@ -3,7 +3,8 @@ source .venv/bin/activate
 
 uv pip install requests
 uv pip install python-dotenv
-python3 imessage.py
+uv pip install aiohttp
+uv run python imessage.py
 
 #alternative withouth creating/activating env
 #uv add requests
