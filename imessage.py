@@ -33,7 +33,6 @@ def is_blacklisted(sender):
         return False
     try:
         with open(BLACKLIST_FILE, 'r', encoding='utf-8') as f:
-            # Create a set of blocked numbers, stripping whitespace/newlines
             blocked_list = {line.strip() for line in f if line.strip()}
         return sender in blocked_list
     except Exception as e:
@@ -91,8 +90,6 @@ def get_chat_guid_from_message(message_guid, sender):
         "with": "chats" 
     }
     fallback_guid = f"iMessage;-;{sender}"
-
-    print(f"Resolving chat guid for message {message_guid}...\r")
     
     try:
         res = requests.get(url, params=params, timeout=10)
