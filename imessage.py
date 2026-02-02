@@ -7,6 +7,7 @@ import asyncio
 from datetime import datetime
 from collections import deque
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 BB_URL = "http://localhost:1234"
@@ -27,6 +28,7 @@ SYSTEM_PROMPT_GEMMA = os.getenv("SYSTEM_PROMPT_GEMMA")
 SYSTEM_PROMPT_GEMINI = os.getenv("SYSTEM_PROMPT_GEMINI")
 
 active_conversations = {}
+Path("history").mkdir(exist_ok=True)
 
 def is_blacklisted(sender):
     if not os.path.exists(BLACKLIST_FILE):
@@ -152,7 +154,7 @@ async def process_conversation_after_delay(sender):
 
             try:
                 print("Saving history.\r")
-                with open(f"{sender}.txt", "a", encoding="utf-8") as f:
+                with open(f"history/{sender}.txt", "a", encoding="utf-8") as f:
                     f.write(f"[Sender - {received_ts}]: {full_text}\n[Me - {reply_timestamp}]: {reply}\n")
             except Exception as e:
                 print(f"Error saving history: {e}\r")
@@ -166,7 +168,7 @@ async def process_conversation_after_delay(sender):
         raise
 
 def get_chat_history(sender, lines_to_read=10):
-    filename = f"{sender}.txt"
+    filename = f"history/{sender}.txt"
     if not os.path.exists(filename):
         return ""
     
@@ -228,7 +230,7 @@ def manage_bot(text, resolved_chat_guid, is_bot_disabled):
             print("Bot disabled.\r")
             return
 
-    send_bb_message(resolved_chat_guid, f'Bot status: {'enabled' if is_bot_disabled else 'disabled'}')
+    send_bb_message(resolved_chat_guid, f'Bot status: {'disabled' if is_bot_disabled else 'enabled'}')
 
 def manage_admin(text, resolved_chat_guid, is_bot_disabled):    
     if text.lower() == '?' or text.lower() == '/help':
