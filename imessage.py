@@ -61,7 +61,7 @@ class BlueBubblesBot:
         except Exception as e:
             print(f"Error saving blacklist: {e}\r")
 
-    async def call_gemini(self, model_name, system_prompt, user_message):
+    async def call_model(self, model_name, user_message):
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={GEMINI_API_KEY}"
         
         if model_name == FALLBACK_MODEL:
@@ -70,11 +70,12 @@ class BlueBubblesBot:
             }
         else:
             payload = {
-                "system_instruction": { "parts": [{"text": SYSTEM_PROMPT_GEMINI}] }, "contents": [{ "parts": [{"text": user_message}] }]
+                "system_instruction": { "role": "model", "parts": [{"text": SYSTEM_PROMPT_GEMINI}] }, 
+                "contents": [{ "role": "user", "parts": [{"text": user_message}] }]
             }
 
         try:
-            async with self.session.post(url, json=payload, timeout=15) as response:
+            async with self.session.post(url, json=payload, timeout=30) as response:
                 if response.status != 200:
                     print(f"[{model_name}] Failed.\r")
                     return None
@@ -88,11 +89,11 @@ class BlueBubblesBot:
     async def get_ai_reply(self, message):
         for model in PRIORITY_MODELS:
             print(f"[{model}] Generating...\r")
-            reply = await self.call_gemini(model, SYSTEM_PROMPT_GEMINI, message)
+            reply = await self.call_model(model, message)
             if reply: return reply
         
         print(f"[{FALLBACK_MODEL}] Switching to fallback...\r")
-        return await self.call_gemini(FALLBACK_MODEL, SYSTEM_PROMPT_GEMMA, message)
+        return await self.call_model(FALLBACK_MODEL, message)
 
     async def get_chat_guid(self, message_guid, sender):
         url = f"{BB_URL}/api/v1/message/{message_guid}"
@@ -107,7 +108,7 @@ class BlueBubblesBot:
                 if data.get('data') and data['data'].get('chats'):
                     return data['data']['chats'][0]['guid']
                 return fallback
-        except Exception:
+        except Exception as e:
             print(f"get_chat_guid: {e}\r")
             return fallback
 
